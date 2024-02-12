@@ -24,14 +24,10 @@ Pert1=(U1+Delta1_U1)*(V1+Delta1_V1);
 
 [VV,LL,index]=approx(Pert0,Pert1,Pert2);
 
-%Consider a perutbation of the exact eigenpairs -- only 2 eigenpairs here
+%Consider a perurbation of the exact eigenpairs -- only 2 eigenpairs here
 %[VV,LL] = polyeig(Pert0,Pert1,Pert2); 
 
-%sottospazio invariante al posto di metter i complessi per gli autovettori
-%mackey de teran dopico quasicanonical form for quadratic matirx
-%polynomials
-
-%[nn,I]=sort(abs(imag(((LL)))));
+%[nn,I]=sort(abs(imag(LL)));
 %numero di autovalori-autovettori approx
 s=4;
 
