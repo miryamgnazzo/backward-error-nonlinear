@@ -1,2 +1,2 @@
 # backward-error-nonlinear
-Backward error for nonlinear eigenvalue problems
+We will need the manopt package for this.
