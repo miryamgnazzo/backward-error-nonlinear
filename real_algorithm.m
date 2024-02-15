@@ -1,9 +1,9 @@
-function [D0,D1,D2,e,t,infotable] = real_algorithm(A0, A1, A2, maxiter, timemax, Vhat, L,k)
+function [D0,D1,D2,e,t,infotable,X] = real_algorithm(A0, A1, A2, maxiter, timemax, Vhat, L,k, mu, X0)
 %k is the rank of the matrix A1
 
 n = length(A1);
 
-mu=0; %10^-1;
+% mu=10^-1;
 
 
 %Manifold for the optimization
@@ -33,13 +33,15 @@ problem.cost = @cost;
 % X0.F0=randn(n);
 
 % %Starting point is [A0,A1,A2]
-X0=M.rand();
-X0.F2=A2;
-[U1,S1,V1]=svd(A1);
-X0.F1.U=U1(:,1:k);
-X0.F1.S=(S1(1:k,1:k));
-X0.F1.V=V1(:,1:k);
-X0.F0=A0;
+if ~exist('X0', 'var')
+    X0=M.rand();
+%     X0.F2=A2;
+%     [U1,S1,V1]=svd(A1);
+%     X0.F1.U=U1(:,1:k);
+%     X0.F1.S=(S1(1:k,1:k));
+%     X0.F1.V=V1(:,1:k);
+%     X0.F0=A0;
+end
 
 %starting point from unstruct
 % [FF0,FF1,FF2]=unstruct_error(A0,A1,A2,Vhat,L);
@@ -71,7 +73,7 @@ Y=M.randvec(X0);
 
 options.maxiter = maxiter;
 options.maxtime = timemax;
-options.tolgradnorm = 1e-12;
+options.tolgradnorm = max(1e-12, mu / 10);
 %options.Delta_bar = 4.47214*1e-0;
 %options.Delta0 = options.Delta_bar/8;
 options.debug=0;
@@ -81,7 +83,7 @@ warning('on', 'manopt:getHessian:approx');
 
 %START of the optimization (usually trustregions)
 [X, xcost, info, options] = trustregions(problem,X0, options);
-%[X, xcost, info, options] = rlbfgs(problem, V0, options);
+%[X, xcost, info, options] = rlbfgs(problem, X0, options);
 %[X, xcost, info, options] = steepestdescent(problem, X0, options);
 
 %keyboard

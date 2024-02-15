@@ -12,7 +12,7 @@ V1=rand(k,n);
 A1=U1*V1;
 A0=randn(n);
 
-epsilon=10^-1;
+epsilon=10^-2;
 Delta2=epsilon*randn(n);
 Delta0=epsilon*randn(n);
 Delta1_U1=epsilon*randn(n,k);
@@ -34,12 +34,9 @@ s=4;
 V=VV(:,1:index(s));
 L=(LL(1:index(s),1:index(s)));
 
-[FF0,FF1,FF2]=unstruct_error(A0,A1,A2,V,L);
-
-
-norm([FF0,FF1,FF2],'fro')
-norm((A2+FF2)*V*L^2+ (A1+FF1)*V*L + (A0+FF0)*V,'fro')
-keyboard
+%[FF0,FF1,FF2]=unstruct_error(A0,A1,A2,V,L);
+%norm([FF0,FF1,FF2],'fro')
+%norm((A2+FF2)*V*L^2+ (A1+FF1)*V*L + (A0+FF0)*V,'fro')
 
 %taking real version (because fixedrankembeddedfactory is for real matrices)
 %V=real(V);
@@ -50,10 +47,16 @@ maxiter = 5000; %maximum number of iterations
 timemax = 100; %maximum running time for manopt
 
 %D0,D1,D2 are the minimizers of the functional
-%[D0,D1,D2,e,t,infotable] = real_algorithm(A0, A1, A2, maxiter, timemax, V, L, k);
+mu = 1/2;
+[D0,D1,D2,e,t,infotable,X0] = real_algorithm(A0, A1, A2, maxiter, timemax, V, L, k, mu);
+mu=1/100;
+[D0,D1,D2,e,t,infotable,X0] = real_algorithm(A0, A1, A2, maxiter, timemax, V, L, k, mu, X0);
+mu=1e-6;
+[D0,D1,D2,e,t,infotable, X0] = real_algorithm(A0, A1, A2, maxiter, timemax, V, L, k, mu, X0);
+mu = 0;
+[D0,D1,D2,e,t,infotable] = real_algorithm(A0, A1, A2, maxiter, timemax, V, L, k, mu, X0);
 
-
-[D0,D1,D2]=struct_err(A0,A1,A2,V,L,k);
+%[D0,D1,D2]=struct_err(A0,A1,A2,V,L,k);
 
 
 %check
