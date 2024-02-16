@@ -4,7 +4,7 @@ function [V, L] = be_newton(F, f, lstart)
 p = length(lstart);
 n = size(F{1}, 1);
 V = zeros(n, p);
-L = zeros(p);
+L = zeros(p, p);
 k = length(F);
 
 for j = 1 : p
@@ -41,7 +41,7 @@ for j = 1 : p
         w = w - N;
     end
 
-    V(:, j) = w(2:end);
+    V(:, j) = w(2:end) / norm(w(2:end));
     L(j,j)  = w(1);
 end
 

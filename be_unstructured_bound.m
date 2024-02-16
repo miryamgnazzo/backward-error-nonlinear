@@ -3,10 +3,23 @@ function [D] = be_unstructured_bound(bndtype, F, f, V, L)
 %
 % F = { F1, ..., Fk }
 % f = { f1, ..., fk }
+%
+% Allowed BNDTYPE:
+%  - 1: Bound based on the smallest singular value of F, the matrix with 
+%       the evaluations of the functions at the eigenvalues. Only holds for
+%       p <= k.
+%  - 2: Bound based on the smallest singular value of F, and the condition 
+%       number of V, the eigevector matrix. Only holds for p <= kn.
+%  - 3: Bound based on smallest singular value of the Khatri-Rao product of
+%       F and V.
 
 p = size(V, 2);
 k = length(F);
 n = size(V, 1);
+
+% For bound 2, we need the assumption that the columns of V are scaled to
+% have unit norm; this is a good idea in any case, so we rescale them here
+V = V ./ vecnorm(V);
 
 R = be_residual(F, f, V, L);
 
@@ -14,19 +27,40 @@ R = be_residual(F, f, V, L);
 % considerably cheaper.
 if isdiag(L)
     FF = zeros(p, k);
-    for j = 1 : k
-        for i = 1 : p
-            FF(i,j) = f{j}(L(i,i));
+    for i = 1 : p
+        fv = f(L(i,i));
+        FF(i, :) = fv;
+    end
+
+    if bndtype == 1
+        if p > k
+            error('BNDTYPE 1 only holds for p <= k')
         end
+
+        sp = min(svd(FF));
+        D = norm(R, 'fro') / sp;
+        return;
     end
 
-    M = Khatri_Rao(FF, V');
-    DD = R * pinv(M');
-
-    D = cell(1, k);
-    for j = 1 : k
-        D{j} = DD(:, (j-1)*n+1:j*n);
+    if bndtype == 2
+        if p > k*n
+            error('BNDTYPE 2 only holds for p <= nk')
+        end
+        sp = min(svd(FF));
+        D = norm(R, 'fro') / sp * cond(V);
+        return;
     end
+
+    if bndtype == 3
+        M = Khatri_Rao(FF, V');
+        % We truncate under machine precision, to ignore zero singular
+        % values that could be contaminated by roundoff errors.
+        s = svd(M); s = s(s >= s(1) * eps);
+        D = norm(R, 'fro') / min(s);
+        return
+    end
+
+    error('Unsupported Bound Type requested')
 else
     error('Not implemented')
 end

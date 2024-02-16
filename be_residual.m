@@ -15,7 +15,7 @@ if isdiag(L)
         end
     end
 else
-    error('Currently unsupported')
+    error('Non-diagonal L are currently unsupported')
 end
 
 
