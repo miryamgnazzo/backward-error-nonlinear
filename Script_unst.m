@@ -1,8 +1,5 @@
 %Script unstructured
 
-%metto github
-%robol
-
 rng(2)
 n=10; %size of the matrix polynomial
 k=2; %rank of the coefficient A1
