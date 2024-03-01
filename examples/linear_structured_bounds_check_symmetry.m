@@ -1,4 +1,5 @@
-%
+% Symmetry case: comparison of the result with the structured error and the
+% error bound for symmetric structure
 % This script checks the structured bound that we have on randomly
 % generated problems and compare this bound with the unstructured one
 % (obtained with the Kathri Rao product).
@@ -8,37 +9,18 @@ ntests = 1000;
 epsilon = 1e-3;
 V = 0;
 n = 64;
-p=2;
+%p=2;
 
 while cond(V) > 1e10
     F = cell(1, 5);
 
     F{1} = eye(n);
-    F{2} = randn(n) / 10; F{2} = F{2} * F{2}';
-    F{3} = randn(n); F{3} = -F{3} * F{3}';
-    F{4} = randn(n); F{4} = F{4} * F{4}';
-    F{5} = randn(n); F{5} = F{5} * F{5}';
-
-
-    Sp2 = randi([0,1],n,n);
-    Sp3 = randi([0,1],n,n);
-    Sp4 = randi([0,1],n,n);
-    Sp5 = randi([0,1],n,n);
-    
-    F{1} = F{1}.*eye(n);
-    F{2} = F{2}.*Sp2;
-    F{3} = F{3}.*Sp3;
-    F{4} = F{4}.*Sp4;
-    F{5} = F{5}.*Sp5;
-
+    F{2} = randn(n) / 10; F{2} = F{2} + F{2}';
+    F{3} = randn(n); F{3} = F{3} + F{3}';
+    F{4} = randn(n); F{4} = F{4} + F{4}';
+    F{5} = randn(n); F{5} = F{5} + F{5}';
+   
     [V, L] = be_newton(F, @f, -1 : 1);
-
-  % [VV, LL] = polyeig(F{1}, F{2}, F{3}, F{4}, F{5});
-
-%     V=VV(:,1:p);
-%     L=LL(1:p);
-%     L=diag(L);
-%    f = @(x) [ 1, x, x^2, x^3, x^4];
 
 end
 
@@ -47,17 +29,13 @@ fprintf('finito Newton \n');
 
 
  %Construction of the matrix P for the linear structure
-    P1=sparsity_struct(F{1});
-    P2=sparsity_struct(F{2});
-    P3=sparsity_struct(F{3});
-    P4=sparsity_struct(F{4});
-    P5=sparsity_struct(F{5});
-
-    P=blkdiag(P1,P2,P3,P4,P5);
+    P1=symmetry_struct(ones(n));
+    
+    P=blkdiag(P1,P1,P1,P1,P1);
 
 nrm = zeros(1, ntests);
 be = zeros(1, ntests);
-bnd = zeros(2, ntests);
+bnd = zeros(3, ntests);
 
 for s = 1 : ntests
     % Ft = be_perturb(F, epsilon * exp(randn));
@@ -65,12 +43,13 @@ for s = 1 : ntests
     Lt = L; Lt = Lt + diag(epsilon * randn(1, size(Lt, 1)));
 
     Ft = be_perturb(F, epsilon * exp(randn));
-    
-    F{1} = F{1}.*eye(n);
-    Ft{2} = Ft{2}.*Sp2;
-    Ft{3} = Ft{3}.*Sp3;
-    Ft{4} = Ft{4}.*Sp4;
-    Ft{5} = Ft{5}.*Sp5;
+
+       %Eventualmente aggiungo symmetric structure
+%     Ft{1} = Ft{1} + Ft{1}';
+%     Ft{2} = Ft{2} + Ft{2}';
+%     Ft{3} = Ft{3} + Ft{3}';
+%     Ft{4} = Ft{4} + Ft{4}';
+%     Ft{5} = Ft{5} + Ft{5}';
 
     R = be_residual(Ft, @f, V, L);
     nrm(s) = norm(R, 'fro');
@@ -83,6 +62,9 @@ for s = 1 : ntests
 
     %Structured bound (linear structures)
     bnd(2, s) = be_linear_structured_bound(Ft, @f, V, L, P);
+
+    %Bound for the symmetric case
+    bnd(3, s) = be_symmetric_bound(Ft, @f, V, L);
     
 end
 
@@ -95,8 +77,9 @@ figure;
 loglog(nrm, be, 'r*'); hold on;
 plot(nrm, bnd(1, :), 'k--');
 plot(nrm, bnd(2, :), 'b--');
+plot(nrm, bnd(3, :), 'g--');
 
-writematrix([nrm', be', bnd'], './linear_structured_bounds_check_fix_new.dat', 'Delimiter', '\t');
+writematrix([nrm', be', bnd'], './linear_structured_bounds_check_symm_bound.dat', 'Delimiter', '\t');
 
  function [fv, fvp] = f(x)
      fv = [ x^2, x, 1, expm(-x), expm(-2*x)];
