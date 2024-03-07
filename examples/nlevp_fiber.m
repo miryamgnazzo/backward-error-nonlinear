@@ -2,11 +2,11 @@
 % Hadeler problem from the NLEVP collection
 %
 
-%n = 64;
 [F, f,~,~,SOL] = nlevp('fiber');
 
 % The first two eigenvalues are good initial estimate for n = 8
-[V, L] = be_newton(F, f, [0.322*1e-3]);
+% [V, L] = be_newton(F, f, SOL.eval);
+[V, L] = be_newton(F, f, 7e-7);
 %keyboard
 %V=SOL.evec;
 %L=SOL.eval;

@@ -1,4 +1,4 @@
-function [V, L] = be_newton(F, f, lstart)
+function [V, L] = be_newton(F, f, lstart, vstart)
 %BE_NEWTON 
 
 p = length(lstart);
@@ -6,16 +6,27 @@ n = size(F{1}, 1);
 V = zeros(n, p);
 L = zeros(p, p);
 k = length(F);
+e = randn(n, 1);
 
 for j = 1 : p
-    v = eye(n, 1);
+
+    if exist('vstart', 'var')
+        v = vstart(:, p);
+    else
+        v = randn(n, 1);
+    end
+    v = v / (e' * v);
+
     l = lstart(j);
     
-    e = ones(n, 1);
     w = [ l ; v ];    
     N = inf;
 
+    it = 0;
+
     while norm(N) > 1e-12
+        it = it + 1;
+
         v = w(2:end); l = w(1);
         [fv, fpv] = f(l);
 
@@ -38,7 +49,15 @@ for j = 1 : p
         J = [ JFv,  FF ; 0, e' ];
         
         N = J \ RES;
-        w = w - N;
+        % N(2:end) = conj(N(2:end));
+
+        % ll = min(1, w(1) / (100 * N(1)));
+        ll = 1;
+
+        w = w - ll * N;
+
+        % fprintf('Iteration %d, RES = %e, l = %e + %ei\n', it, norm(RES), real(l), imag(l));
+        % keyboard;
     end
 
     V(:, j) = w(2:end) / norm(w(2:end));
