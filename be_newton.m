@@ -42,7 +42,7 @@ for j = 1 : p
 
         FF = fv(1) * F{1};
         for jj = 2 : k
-            FF = FF + fv(jj) * F{jj};
+            FF = FF + F{jj} * fv(jj);
         end
 
         RES = [ RES; e' * v - 1 ];

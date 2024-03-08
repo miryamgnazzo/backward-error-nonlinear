@@ -25,7 +25,7 @@ function [D] = be_riemannian(F, f, structures, V, L)
 % Determine the size n of the problem (for low-rank problems, we look at
 % the number of rows in U).
 if strcmp(structures{1}, 'low-rank')
-    n = size(F{1}{1}, 1);
+    n = size(F{1}.U, 1);
 else
     n = size(F{1}, 1);
 end
@@ -35,12 +35,12 @@ elements = struct;
 for j = 1 : length(structures)
     MM = [];
 
-    switch structures
+    switch structures{j}
         case 'low-rank'
-            k = size(F{j}{1}, 2);
+            k = size(F{j}.U, 2);
             MM = fixedrankembeddedfactory(n, n, k);
         case 'identity'
-            % FIXME: We should implement the sparse factory here, and not
+            % FIXME: We should implement the identity factory here, and not
             % use the sparse one which does not force all elements equal
             % along the diagonal.
             MM = euclideansparsefactory(F{j});
@@ -55,110 +55,76 @@ end
 M = productmanifold(elements);
 
 % Select a starting point (we use the coefficients in F)
-X0 = M.rand();
+X = struct;
 for j = 1 : length(structures)
     elname = sprintf('F%d', j);
 
-    switch(structures)
+    switch structures{j}
         case 'low-rank'
-            [QU, RU] = qr(F{j}{1}, 0); [QV, RV] = qr(F{j}{2}, 0);
-            [U, S, V] = svd(RU * RV');
-            X0.(elname) = struct('U', U * QU, 'S', S, 'V', V * QV);
+            [QU, RU] = qr(F{j}.U, 0); [QV, RV] = qr(F{j}.V, 0);
+            [UU, S, VV] = svd(RU * RV');
+            X.(elname) = struct('U', QU * UU, 'S', S, 'V', QV * VV);
         case 'sparse'
-            XO.(elname) = F{j};
+            X.(elname) = F{j};
         case 'identity'
-            XO.(elname) = F{j};
+            X.(elname) = F{j};
     end
 end
-
-X = X0;
 
 % Select the regularization parameter, and repeat the optimization process
 % while mu goes to zero.
 mu = 1;
 for j = 1 : 10
-    X = be_riemannian_step(F, f, structures, mu, V, L, M, X);
+    X = be_riemannian_step(F, f, structures, mu, V, L, M, elements, X);
     mu = mu / 4;
 end
+% X = be_riemannian_step(F, f, structures, 0.01, V, L, M, elements, X);
 
 % Extract the perturbations from X
 D = F;
-for j = 1 : structures
+for j = 1 : length(structures)
     elname = sprintf('F%d', j);
-    switch structures(j)
+    switch structures{j}
         case 'sparse'
             D{j} = X.(elname) - F{j};
         case 'identity'
             D{j} = X.(elname) - F{j};
         case 'low-rank'
             XL = X.(elname);
-            D{j} = { [ XL.U * XL.S, -F{j}{1} ], [ XL.V, F{j}{2} ] };
+            D{j} = lowrank([ XL.U * XL.S, -F{j}.U ], [ XL.V, F{j}.V ]);
     end
 end
     
 end
 
-function X = be_riemannian_step(F, f, structures, mu, V, L, M, X0)
+function X = be_riemannian_step(F, f, structures, mu, V, L, M, elements, X0)
 
-problem.M=M;
+problem.M = M;
 problem.cost = @(X) cost(F, f, structures, mu, V, L, X);
+problem.grad = @(X) grad(F, f, structures, mu, V, L, elements, X);
 
-A=[A2 A1 A0];
+% keyboard;
 
-% Euclidean gradient. Projection from ambient space to the tangent space of
-% U(n) is handled automatically (see stiefelcomplexfactory documentation)
-problem.egrad = @egrad;
-%problem.grad = @(X) problem.M.egrad2rgrad(X, egrad(X));
-% Euclidean Hessian. Projection is handled automatically.
 %problem.ehess = @ehess;
 
-%Y=M.randvec(X0);
-
-%hessfd=getHessianFD(problem,X0,Y);
-%keyboard
-
-%Commenting the instruction for the gradient/Hessian we use the FD
-%approximation in Manopt
-%Uncommenting them we use the exact form provided in egrad or ehess
-
-options.maxiter = maxiter;
-options.maxtime = timemax;
-options.tolgradnorm = 1e-12;
+options.maxiter = 10000;
+options.maxtime = 10;
+options.tolgradnorm = 1e-8;
 options.Delta_bar = 4.47214*1e-0;
 options.Delta0 = options.Delta_bar/8;
-options.debug=0;
+options.debug = 0;
 options.rho_regularization = 1e3;
 
 warning('on', 'manopt:getHessian:approx');
 
 %START of the optimization (usually trustregions)
-[X, xcost, info, options] = trustregions(problem,X0, options);
-%[X, xcost, info, options] = rlbfgs(problem, V0, options);
+[X, xcost, info, options] = trustregions(problem, X0, options);
+%[X, xcost, info, options] = rlbfgs(problem, X0, options);
 %[X, xcost, info, options] = steepestdescent(problem, X0, options);
 
-%keyboard
-
-
 infotable = struct2table(info);
-%e = sqrt(infotable.cost);
 e = infotable.cost;
 t = infotable.time;
-
-%X will be the final output
-disp('FINAL COST')
-xcost
-
-
-%Final pertubations from the output X
-D2=X.F2;
-DD1=X.F1;
-D0=X.F0;
-
-%From structure to matrix (for the low rank coefficient)
-D1=(DD1.U)*(DD1.S)*(DD1.V)';
-
-disp('FINAL Dist')
-norm([D2 D1 D0],'fro')
 
 end
 
@@ -170,7 +136,7 @@ function f = cost(F, f, structures, mu, V, L, X)
 
         for i = 1 : length(structures)
             elname = sprintf('F%d', i);
-            switch structures(j)
+            switch structures{i}
                 case 'sparse'
                     RES(:,j) = RES(:,j) + fv(i) * (X.(elname) * V(:,j));
                 case 'identity'
@@ -188,13 +154,13 @@ function f = cost(F, f, structures, mu, V, L, X)
 
     % Regularization term mu * dist(X, X0)
     fr = zeros(1, length(structures));
-    for j = 1 : structures
+    for j = 1 : length(structures)
         elname = sprintf('F%d', j);
-        switch structures(j)
+        switch structures{j}
             case 'low-rank'
                 fr(j) = lr_norm(...
-                    [ X.(elname).U * X.(elname).S, -F{j}{1} ], ...
-                    [ X.(elname).V, F{j}{2} ]);
+                    [ X.(elname).U * X.(elname).S, -F{j}.U ], ...
+                    [ X.(elname).V, F{j}.V ]);
             case 'sparse'
                 fr(j) = norm(X.(elname) - F{j}, 'fro');
             case 'identity'
@@ -202,77 +168,72 @@ function f = cost(F, f, structures, mu, V, L, X)
         end
     end
 
-    f = norm([ f, mu * fr ]);
+    f = norm([ f, mu * fr ]).^2;
 end
 
-function f = costold(X)
-%Computes the cost function given an element X of the product manifold
-    
-   E2=X.F2;
-   E1=X.F1;
-   
-   U=E1.U;
-   V=E1.V;
-   S=E1.S;
-  
-   E0=X.F0;
-   
-   EE1=U*S*V'; %From structure to matrix for the low rank term
-   
-   E=[E2 EE1 E0];
-   W=[Vhat*L^2; Vhat*L; Vhat]; 
-   
-   f = mu*norm((A+E)*W,'fro')^2 + (norm(E,'fro')^2);     
-%  f = norm((A+E)*W,'fro')^2 + mu*(norm(E,'fro')^2);     
+function g = grad(F, f, structures, mu, V, L, elements, X)
+    % Working assumption: L is diagonal, f_j(L) = diag(f_j(L_{ii}))
+    % We may generalize this, but we need a "matrix-function" handle for
+    % f_j, which is not available for NLEVP problems. 
 
+    k = length(structures);
+    n = size(V, 1);
+
+    % Compute the block vector W = [ V f_1(L) ; ... ; V f_k(L) ]
+    W = kron(ones(k, 1), V);
+    for j = 1 : size(W, 2)
+        l = L(j,j);
+        fv = f(l);
+        for i = 1 : length(fv)
+            % This is V(:,j) * f_i(L(j,j))
+            W((i-1)*n+1 : i*n, j) = W((i-1)*n+1 : i*n, j) * fv(i);
+        end
+    end
+
+    % Compute Ft * W = F1 * W1 + ... + Fk * Wk;
+    FtW = zeros(n, size(W, 2));
+    for i = 1 : k
+        elname = sprintf('F%d', i);
+        Wi = W((i-1)*n+1:i*n, :);
+        switch structures{i}
+            case 'low-rank'
+                FtW = FtW + X.(elname).U * X.(elname).S * (X.(elname).V' * Wi);
+            case 'sparse'
+                FtW = FtW + X.(elname) * Wi;
+            case 'identity'
+                FtW = FtW + X.(elname) * Wi;
+        end
+    end
+
+    % Assemble all components of the gradient
+    g = struct;
+    for i = 1 : k
+        % grad_i is 2 * (FtW * Wi' + mu * (X.Fi - Fi))
+        elname = sprintf('F%d', i);
+        Wi = W((i-1)*n+1:i*n, :);
+
+        switch structures{i}
+            case 'low-rank'
+                egrad_i = struct;
+                egrad_i.U = [ 2 * FtW, ...
+                    2*mu*X.(elname).U, ...
+                    -2*mu*F{i}.U ];
+                egrad_i.S = blkdiag(eye(size(W, 2)), X.(elname).S, eye(size(F{i}.U, 2)));
+                egrad_i.V = [ Wi, X.(elname).V, F{i}.V ];
+
+                grad_i = elements.(elname).egrad2rgrad(X.(elname), egrad_i);
+            case 'sparse'
+                grad_i = 2 * sparse_lr(F{i}, FtW, Wi) + ...
+                    2 * mu * (X.(elname) - F{i});
+            case 'identity'
+                grad_i = 2 * sparse_lr(F{i}, FtW, Wi) + ...
+                    2 * mu * (X.(elname) - F{i});
+        end
+
+        g.(elname) = grad_i;
+    end
 end
 
-function g = egrad(X)
-%Computes the euclidian gradient given an element X of the product manifold
-
-   E2 = X.F2;
-   E1 = X.F1;
-  
-   U = E1.U;
-   V = E1.V;
-   S = E1.S;
-   
-   EE1=U*S*V'; %From structure to matrix for the low rank term
-
-   E0 = X.F0;
-      
-   W2=Vhat*L^2; 
-   W1=Vhat*L; 
-   W0=Vhat;
-   
-   E = [E2 EE1 E0];
-   W=[W2; W1; W0];
-   
-%   Matrix=F*W;
-   Matrix=(E+A)*W;
-
-
-   g.F0=2*Matrix*W0';
-   g.F1=2*Matrix*W1'; 
-   g.F2=2*Matrix*W2';
-    
-   g.F2=mu*g.F2 + 2*(E2);
-   g.F1=mu*g.F1 + 2*(EE1);
-   g.F0=mu*g.F0 + 2*(E0);
-
-%    g.F2= g.F2 + 2*mu*(E2);
-%    g.F1= g.F1 + 2*mu*(EE1);
-%    g.F0= g.F0 + 2*mu*(E0);
-
-   %In this way I usually compare the eucliedian gradient with the FD one
-%   gradfun = approxgradientFD(problem);
-%    temp1 = gradfun(X);
-%    temp2 = problem.M.proj(X,g);
-%        
-%     nn=norm(temp1.F2 - temp2.F2,'f')/ norm(temp2.F2,'fro')
-%     
-%     keyboard
-end
 
 function nrm = lr_norm(U, V)
     [~, RU] = qr(U, 0);

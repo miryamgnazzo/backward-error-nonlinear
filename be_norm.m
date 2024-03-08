@@ -3,7 +3,12 @@ function nrm = be_norm(D)
 
 nrm = zeros(1, length(D));
 for j = 1 : length(D)
-    nrm(j) = norm(D{j}, 'fro');
+    if isa(D{j}, 'lowrank')
+        % low-rank
+        nrm(j) = lr_norm(D{j}.U, D{j}.V, 'fro');
+    else
+        nrm(j) = norm(D{j}, 'fro');
+    end
 end
 
 nrm = norm(nrm);
