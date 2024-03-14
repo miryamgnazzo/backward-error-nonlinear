@@ -4,14 +4,14 @@ n = 10000;
 k = 2;
 l = 2;
 
-A0 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
-U = randn(n, k);
-A1 = lowrank(U, -U);
-A2 = speye(n);
-
-F = { A0, A1, A2 };
-
-[V, L] = be_newton(F, @f, [-1, -4]);
+% A0 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
+% U = randn(n, k);
+% A1 = lowrank(U, -U);
+% A2 = speye(n);
+% 
+% F = { A0, A1, A2 };
+% 
+% [V, L] = be_newton(F, @f, [-1, -4]);
 
 % 
 % [V, L] = polyeig(A0, A1.U * A1.V', A2);

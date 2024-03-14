@@ -168,7 +168,7 @@ function f = cost(F, f, structures, mu, V, L, X)
         end
     end
 
-    f = norm([ f, mu * fr ]).^2;
+    f = norm([ f, sqrt(mu) * fr ]).^2;
 end
 
 function g = grad(F, f, structures, mu, V, L, elements, X)

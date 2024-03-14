@@ -75,9 +75,10 @@ end
 % Select the regularization parameter, and repeat the optimization process
 % while mu goes to zero.
 mu = 1;
-for j = 1 : 10
+while sqrt(mu) > eps
+    fprintf('Running Riemannian optimization with mu = %e\n', mu);
     X = be_riemannian_step(F, f, structures, mu, V, L, M, elements, X);    
-    mu = mu / 4;
+    mu = mu / 8;
 end
 % X = be_riemannian_step(F, f, structures, 0.01, V, L, M, elements, X);
 
@@ -109,7 +110,7 @@ problem.hess = @(X, dX) hess(F, f, structures, mu, V, L, elements, X, dX);
 
 options.maxiter = 10000;
 options.maxtime = 10;
-options.tolgradnorm = 1e-10;
+options.tolgradnorm = sqrt(mu);
 options.Delta_bar = 4.47214*1e-0;
 options.Delta0 = options.Delta_bar/8;
 options.debug = 0;
@@ -168,7 +169,8 @@ function f = cost(F, f, structures, mu, V, L, X)
         end
     end
 
-    f = f^2+ mu * sum(fr.^2);
+    % f = f^2 + mu * sum(fr.^2);
+    f = norm([ f, sqrt(mu) * fr ]).^2;
 end
 
 function g = grad(F, f, structures, mu, V, L, elements, X)
