@@ -20,20 +20,22 @@ for j = 1 : p
     l = lstart(j);
     
     w = [ l ; v ];    
-    N = inf;
+    RES = inf;
 
     it = 0;
 
-    while norm(N) > 1e-12
+    while norm(RES) > 1e-12
         it = it + 1;
 
-        v = w(2:end); l = w(1);
+        v = w(1:end-1); l = w(end);
         [fv, fpv] = f(l);
 
         RES = fv(1) * (F{1}*v);
         for jj = 2 : k
             RES = RES + fv(jj) * (F{jj} * v);
         end
+
+        % fprintf('Newton, step %d, RES norm = %e\n', it, norm(RES));
 
         JFv = fpv(1) * (F{1} * v);
         for jj = 2 : k
@@ -46,9 +48,21 @@ for j = 1 : p
         end
 
         RES = [ RES; e' * v - 1 ];
-        J = [ JFv,  FF ; 0, e' ];
+        % J = [ JFv,  FF ; 0, e' ];
         
-        N = J \ RES;
+        if issparse(FF)
+            % Solution through Schur complementation to exploit sparsity
+            [ii, jj, vv] = find(FF);
+            ii = [ ii ; (1 : n)' ; (n+1)*ones(n,1) ]; 
+            jj = [ jj ; (n+1)*ones(n,1) ; (1:n)' ];
+            vv = [ vv ; JFv ; e ];
+            J = sparse(ii, jj, vv, n+1, n+1);
+
+            N = J \ RES;
+        else
+            J = [ FF , JFv ; e', 0 ];
+            N = J \ RES;
+        end
         % N(2:end) = conj(N(2:end));
 
         % ll = min(1, w(1) / (100 * N(1)));
@@ -60,8 +74,8 @@ for j = 1 : p
         % keyboard;
     end
 
-    V(:, j) = w(2:end) / norm(w(2:end));
-    L(j,j)  = w(1);
+    V(:, j) = w(1:end-1) / norm(w(1:end-1));
+    L(j,j)  = w(end);
 end
 
 end
