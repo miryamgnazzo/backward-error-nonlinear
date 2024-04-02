@@ -1,7 +1,6 @@
 % %
 %Beam with Riemannian optimization framework
-n = 50000;
-V = 0;
+n = 100000;
 
 A0 = speye(n);
 A1 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
@@ -10,8 +9,7 @@ A2 = sparse(n,n,1);
 F = { A0, A1, A2 };
 [V, L] = be_newton(F, @f, -linspace(0.1, 1, 3));
 
-
-keyboard;
+% keyboard;
 
 e = 1e-4;
 dA0 = e * randn * speye(n);

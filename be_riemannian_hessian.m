@@ -44,7 +44,7 @@ for j = 1 : length(structures)
             % FIXME: We should implement the identity factory here, and not
             % use the sparse one which does not force all elements equal
             % along the diagonal.
-            MM = euclideansparsefactory(F{j});
+            MM = multipleidentityfactory(size(F{j}, 1));
         case 'sparse'
             MM = euclideansparsefactory(F{j});
     end
@@ -68,7 +68,7 @@ for j = 1 : length(structures)
         case 'sparse'
             X.(elname) = F{j};
         case 'identity'
-            X.(elname) = F{j};
+            X.(elname) = elements.(elname).proj([], F{j});
     end
 end
 
@@ -78,9 +78,9 @@ mu = 1;
 while sqrt(mu) > eps
     fprintf('Running Riemannian optimization with mu = %e\n', mu);
     X = be_riemannian_step(F, f, structures, mu, V, L, M, elements, X);    
-    mu = mu / 8;
+    mu = mu / 64;
 end
-% X = be_riemannian_step(F, f, structures, 0.01, V, L, M, elements, X);
+% X = be_riemannian_step(F, f, structures, eps^2, V, L, M, elements, X);
 
 % Extract the perturbations from X
 D = F;
@@ -90,7 +90,7 @@ for j = 1 : length(structures)
         case 'sparse'
             D{j} = X.(elname) - F{j};
         case 'identity'
-            D{j} = X.(elname) - F{j};
+            D{j} = X.(elname) * speye(n) - F{j};
         case 'low-rank'
             XL = X.(elname);
             D{j} = lowrank([ XL.U * XL.S, -F{j}.U ], [ XL.V, F{j}.V ]);
@@ -106,15 +106,16 @@ problem.cost = @(X) cost(F, f, structures, mu, V, L, X);
 problem.grad = @(X) grad(F, f, structures, mu, V, L, elements, X);
 problem.hess = @(X, dX) hess(F, f, structures, mu, V, L, elements, X, dX);
 
-%keyboard;
+% keyboard;
 
-options.maxiter = 10000;
-options.maxtime = 10;
+options.maxiter = 2 + (mu == 1 || mu == 0) * 18;
+options.maxtime = inf;
 options.tolgradnorm = sqrt(mu);
 options.Delta_bar = 4.47214*1e-0;
 options.Delta0 = options.Delta_bar/8;
 options.debug = 0;
 options.rho_regularization = 1e3;
+options.maxinner = 2000;
 
 warning('on', 'manopt:getHessian:approx');
 
@@ -165,7 +166,7 @@ function f = cost(F, f, structures, mu, V, L, X)
             case 'sparse'
                 fr(j) = norm(X.(elname) - F{j}, 'fro');
             case 'identity'
-                fr(j) = norm(X.(elname) - F{j}, 'fro');
+                fr(j) = norm(X.(elname) - diag(F{j}), 2);
         end
     end
 
@@ -228,8 +229,8 @@ function g = grad(F, f, structures, mu, V, L, elements, X)
                 grad_i = 2 * sparse_lr(F{i}, FtW, Wi) + ...
                     2 * mu * (X.(elname) - F{i});
             case 'identity'
-                grad_i = 2 * sparse_lr(F{i}, FtW, Wi) + ...
-                    2 * mu * (X.(elname) - F{i});
+                grad_i = 2 * trace(Wi' * FtW) / n + ...
+                    2 * mu * (X.(elname) - trace(F{i}) / n);
         end
 
         g.(elname) = grad_i;
@@ -313,7 +314,7 @@ function h = hess(F, f, structures, mu, V, L, elements, X, dX)
                 hess_i = 2 * sparse_lr(F{i}, EtW, Wi) + ...
                     2 * mu * dX.(elname);
            case 'identity'
-                hess_i = 2 * sparse_lr(F{i}, EtW, Wi) + ...
+                hess_i = 2 * trace(Wi' * EtW) / n + ...
                     2 * mu * dX.(elname);
                 
         end
