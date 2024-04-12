@@ -3,7 +3,7 @@ This repository contains the numerical implementation, in MATLAB, of the algorit
 
 M. Gnazzo, L. Robol, ..., available on arXiv.
 
-The use of the Riemannian optimization-based approach requires the [manoot package](https://www.manopt.org/index.html).
+The use of the Riemannian optimization-based approach requires the [manopt package](https://www.manopt.org/index.html).
 
 
 
