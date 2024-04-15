@@ -16,6 +16,7 @@ while cond(V) > 1e10
     F{4} = randn(n); F{4} = F{4} * F{4}';
     F{5} = randn(n); F{5} = F{5} * F{5}';
     
+    % approximation of 3 eigenpairs
     [V, L] = be_newton(F, @f, -1 : 1);
 end
 
@@ -24,7 +25,6 @@ be = zeros(1, ntests);
 bnd = zeros(3, ntests);
 
 for s = 1 : ntests
-    % Ft = be_perturb(F, epsilon * exp(randn));
     Vt = V; Vt = Vt + randn(size(Vt)) * diag(epsilon * randn(1, size(Vt, 2)));
     Lt = L; Lt = Lt + diag(epsilon * randn(1, size(Lt, 1)));
 
@@ -50,7 +50,7 @@ plot(nrm, bnd(1, :), 'k--');
 plot(nrm, bnd(2, :), 'b--');
 plot(nrm, bnd(3, :), 'm--');
 
-writematrix([nrm', be', bnd'], './unstructured_bounds_check.dat', 'Delimiter', '\t');
+%writematrix([nrm', be', bnd'], './unstructured_bounds_check.dat', 'Delimiter', '\t');
 
 function [fv, fvp] = f(x)
     fv = [ x^2, x, 1, expm(-x), expm(-2*x)];

@@ -1,5 +1,7 @@
-% %
-%Beam with Riemannian optimization framework
+% Problem "beam" from NEP-PACK
+% It employs a Riemannian optimization based technique,
+% in order to provide an approximation of the structured backward error.
+%
 n = 100000;
 
 A0 = speye(n);
@@ -8,8 +10,6 @@ A1(end, end-1:end) = [ -n, n ];
 A2 = sparse(n,n,1);
 F = { A0, A1, A2 };
 [V, L] = be_newton(F, @f, -linspace(0.1, 1, 3));
-
-% keyboard;
 
 e = 1e-4;
 dA0 = e * randn * speye(n);
@@ -29,7 +29,7 @@ Dtrue{2} = A1 - A1t;
 Dtrue{3} = A2 - A2t;
 
 tic;
-D = be_riemannian_hessian(Ft, @f, ...
+D = be_riemannian(Ft, @f, ...
     { 'identity', 'sparse', 'sparse' }, V, L);
 time  = toc;
 
