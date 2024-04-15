@@ -1,8 +1,12 @@
 function [D] = be_unstructured_bound(bndtype, F, f, V, L)
 %BE_UNSTRUCTURED Return the backward error D for the NEP. 
 %
-% F = { F1, ..., Fk }
-% f = { f1, ..., fk }
+% F = { F1, ..., Fk } coefficient matrices
+% f = { f1, ..., fk } functions
+% V = [v1, ..., vp] approximate eigenvectors
+% L = diag(l1, ...,lp) approximate eigenvalues
+% bndtype may be 1,2,3
+%
 %
 % Allowed BNDTYPE:
 %  - 1: Bound based on the smallest singular value of F, the matrix with 
@@ -67,3 +71,17 @@ end
 
 end
 
+function K=Khatri_Rao(F,V)
+% K= Kathri- Rao transpose product between F and V
+
+K=zeros(size(F,1),size(F,2)*size(V,2));
+
+if (size(F,1)~=size(V,1))
+    error('inconsistent dimension') 
+end
+
+for i=1:size(F,1)
+    K(i,:)=kron(F(i,:),V(i,:)); 
+end
+
+end

@@ -1,8 +1,10 @@
 function [D] = be_symmetric_bound(F, f, V, L)
 %BE_SYMMETRIC_BOUND Return the backward error D for the NEP.
 %
-% F = { F1, ..., Fk }
-% f = { f1, ..., fk }
+% F = { F1, ..., Fk } coefficient matrices
+% f = { f1, ..., fk } functions
+% V = [v1, ..., vp] approximate eigenvectors
+% L = diag(l1, ..., lp) approximate eigenvalues
 %
 %
 % D=Bound for the symmetric case
@@ -11,7 +13,7 @@ p = size(V, 2);
 k = length(F);
 n = size(V, 1);
 
-% For bound 2, we need the assumption that the columns of V are scaled to
+% For bound 2 (unstructured), we need the assumption that the columns of V are scaled to
 % have unit norm; this is a good idea in any case, so we rescale them here
 V = V ./ vecnorm(V);
 
@@ -27,15 +29,9 @@ if isdiag(L)
         FF(i, :) = fv;
     end 
 
-
     %Construction of the matrix \tilde T (here =T)
-    [Q, R] = qr(V);
-    Qt  = Q(:, 1:p);
-    Rt = R(1:p, :);
-    Qto = Q(:, p+1:end);
-    
-    Res1 = - Qt' * Res;
-    Res2 = - Qto' * Res;
+    [~, R] = qr(V);
+    Rt = R(1:p, :);    
 
     T = zeros(k*p,p);
 

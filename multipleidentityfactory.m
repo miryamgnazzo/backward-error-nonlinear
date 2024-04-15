@@ -1,4 +1,7 @@
 function M = multipleidentityfactory(n)
+% Returns a manifold struct to optimize over multiples of the identity of
+% size n x n. The multiple of the identity are represented as scalars.
+%
     % n = size of the matrices involved
       
     M.size = @() [n n];
@@ -10,7 +13,7 @@ function M = multipleidentityfactory(n)
 
     M.inner = @(x, d1, d2) n*d1'*d2;
     
-    M.norm = @(x, d) sqrt(n)*abs(d); %norm(d, 'fro');
+    M.norm = @(x, d) sqrt(n)*abs(d);
     
     M.dist = @(x, y) sqrt(n) * abs(x - y);
 
