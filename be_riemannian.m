@@ -1,4 +1,4 @@
-function [D] = be_riemannian_hessian(F, f, structures, V, L)
+function [D] = be_riemannian(F, f, structures, V, L)
 %BE_RIEMANNIAN
 % WITH the addition of the Riemannian Hessian for the cost function
 %
