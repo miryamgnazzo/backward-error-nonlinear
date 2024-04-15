@@ -24,10 +24,8 @@ while cond(V) > 1e10
 end
 
 %Construction of the matrix P for the linear structure
-%P1=symmetry_struct(ones(n));
-%
-% 
-% P=blkdiag(P1,P1,P1,P1,P1);
+P1=symmetry_struct(ones(n)); 
+P=blkdiag(P1,P1,P1,P1,P1);
 
 nrm = zeros(1, ntests);
 be = zeros(1, ntests);
@@ -47,7 +45,6 @@ for s = 1 : ntests
 
     R = be_residual(Ft, @f, V, L);
     nrm(s) = norm(R, 'fro');
-    %D = be_linear_structured(Ft, @f, V, L, P);
     D = be_symmetric(Ft, @f, V, L);
 
     be(s) = be_norm(D);
@@ -56,7 +53,7 @@ for s = 1 : ntests
     bnd(1, s) = be_unstructured_bound(3, Ft, @f, V, L);
 
     %Structured bound (linear structures)
-   % bnd(2, s) = be_linear_structured_bound(Ft, @f, V, L, P);
+    bnd(2, s) = be_linear_structured_bound(Ft, @f, V, L, P);
 
     %Bound for the symmetric case
     bnd(3, s) = be_symmetric_bound(Ft, @f, V, L);
@@ -71,10 +68,10 @@ bnd = bnd(:, I);
 figure;
 loglog(nrm, be, 'r*'); hold on;
 plot(nrm, bnd(1, :), 'k--');
-% plot(nrm, bnd(2, :), 'b--');
+plot(nrm, bnd(2, :), 'b--');
 plot(nrm, bnd(3, :), 'g--');
 
-writematrix([nrm', be', bnd'], './linear_structured_bounds_check_symm_bound_n2048_n.dat', 'Delimiter', '\t');
+writematrix([nrm', be', bnd'], './linear_structured_bounds_check_symm_bound.dat', 'Delimiter', '\t');
 
  function [fv, fvp] = f(x)
      fv = [ x^2, x, 1, expm(-x), expm(-2*x)];
