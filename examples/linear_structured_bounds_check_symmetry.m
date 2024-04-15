@@ -8,7 +8,7 @@
 ntests = 1000;
 epsilon = 1e-3;
 V = 0;
-n = 2048;
+n = 64;
 
 while cond(V) > 1e10
     F = cell(1, 5);
