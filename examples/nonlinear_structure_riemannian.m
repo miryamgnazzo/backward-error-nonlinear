@@ -4,9 +4,8 @@
 % approximate eigenpairs. It employs Riemannian optimization-based
 % technique.
 %
-n = 100 %00;
+n = 10000;
 k = 2;
-l = 2;
 
  A0 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
  U = randn(n, k);
