@@ -14,13 +14,11 @@ unstructured backward error follows the methodology in [1].
                        for nonlinear structures (sparsity structures, low-rank, multiple of the identity),
                         by a Riemannian optimization based method (Section 3.3, [1]).
 
+The folder <code>examples/</code> collects the codes for the numerical experiments provided in Section 4 [1].
+
 [1] M. Gnazzo, L. Robol, Backward errors for multiple eigenpairs in structured and unstructured nonlinear eigenvalue problems,
 available on arXiv (2024).
 
-The use of the Riemannian optimization-based approach requires the [manopt package](https://www.manopt.org/index.html).
-
-The folder <code>examples/</code> collects a few examples.
-
-
-
-
+## Dependencies
+* The use of the Riemannian optimization-based approach requires the [manopt package](https://www.manopt.org/index.html).
+* A few nonlinear eignvalue problems are taken from the collection [nlevp](https://github.com/ftisseur/nlevp?tab=readme-ov-file).
