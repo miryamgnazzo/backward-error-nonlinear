@@ -21,4 +21,4 @@ available on arXiv (2024).
 
 ## Dependencies
 * The use of the Riemannian optimization-based approach requires the [manopt package](https://www.manopt.org/index.html).
-* A few nonlinear eignvalue problems are taken from the collection [nlevp](https://github.com/ftisseur/nlevp?tab=readme-ov-file).
+* A few nonlinear eigenvalue problems are taken from the collection [nlevp](https://github.com/ftisseur/nlevp?tab=readme-ov-file).
