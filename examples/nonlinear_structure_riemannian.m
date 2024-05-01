@@ -1,21 +1,21 @@
-% %
-%rng(3)
+% Quadratic eigenvalue problem, with possible nonlinear structures (low-rank) on the
+% coefficients.
+% It computes an approximation for the structured backward error, for 2
+% approximate eigenpairs. It employs Riemannian optimization-based
+% technique.
+%
 n = 10000;
 k = 2;
-l = 2;
 
-% A0 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
-% U = randn(n, k);
-% A1 = lowrank(U, -U);
-% A2 = speye(n);
-% 
-% F = { A0, A1, A2 };
-% 
-% [V, L] = be_newton(F, @f, [-1, -4]);
+ A0 = spdiags(ones(n, 1) * [1 -2 1], -1:1, n, n);
+ U = randn(n, k);
+ A1 = lowrank(U, -U);
+ A2 = speye(n);
+ 
+ F = { A0, A1, A2 };
 
-% 
-% [V, L] = polyeig(A0, A1.U * A1.V', A2);
-% V = V(:, 1:l); L = diag(L(1:l));
+% Approximation of 2 eigenpairs
+[V, L] = be_newton(F, @f, [-1, -4]);
 
 e = 1e-4;
 dA0 = spdiags(randn(n, 3) * e, -1:1, n, n);
@@ -34,8 +34,10 @@ Dtrue{1} = A0 - A0t;
 Dtrue{2} = lowrank([ A1.U, -A1t.U], [A1.V, A1t.V ]);
 Dtrue{3} = A2 - A2t;
 
-D = be_riemannian_hessian(Ft, @f, ...
+tic;
+D = be_riemannian(Ft, @f, ...
     { 'sparse', 'low-rank', 'identity' }, V, L);
+time = toc;
 
 % Computed backward error
 A0t2 = A0t + D{1}; 

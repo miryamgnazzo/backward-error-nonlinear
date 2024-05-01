@@ -1,5 +1,9 @@
 function Ft = be_perturb(F, epsilon)
 %BE_PERTURB 
+% Perturbation of the coefficient matrices of size eps
+%
+% F = { F1, ..., Fk }
+% eps = perturbation size
 
 Ft = F;
 

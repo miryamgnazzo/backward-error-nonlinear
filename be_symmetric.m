@@ -1,8 +1,10 @@
 function [D] = be_symmetric(F, f, V, L)
 %BE_SYMMETR Return the backward error D for the NEP, symmetric case
 %
-% F = { F1, ..., Fk }
-% f = { f1, ..., fk }
+% F = { F1, ..., Fk } coefficient matrices
+% f = { f1, ..., fk } functions
+% V = [v1, ..., vp] approximate eigenvectors
+% L = diag(l1, ..., lp) approximate eigenvalues
 
 p = size(V, 2);
 k = length(F);

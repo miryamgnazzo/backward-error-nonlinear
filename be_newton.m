@@ -1,5 +1,13 @@
 function [V, L] = be_newton(F, f, lstart, vstart)
 %BE_NEWTON 
+% Newton method for the numerical approximation of p eigenpairs of
+% nonlinear eigenvalue problems
+%
+%
+% F = { F1, ..., Fk } coefficient matrices
+% f = { f1, ..., fk } functions
+% lstart = [l1, ..., lp] initial approximate eigenvalues
+% vstart = [v1, ..., vp] initial approximate eigenvectors (optional)
 
 p = length(lstart);
 n = size(F{1}, 1);
@@ -63,15 +71,11 @@ for j = 1 : p
             J = [ FF , JFv ; e', 0 ];
             N = J \ RES;
         end
-        % N(2:end) = conj(N(2:end));
-
-        % ll = min(1, w(1) / (100 * N(1)));
         ll = 1;
 
         w = w - ll * N;
 
         % fprintf('Iteration %d, RES = %e, l = %e + %ei\n', it, norm(RES), real(l), imag(l));
-        % keyboard;
     end
 
     V(:, j) = w(1:end-1) / norm(w(1:end-1));
