@@ -63,8 +63,6 @@ else
     plot(nrm, bnd(3, :), 'g--');
 end
 
-%writematrix([nrm', be', bnd'], './unstructured_bounds_check_beam.dat', 'Delimiter', '\t');
-
 function [fv, fp] = f(lambda)
     fv = [ -lambda, 1.0,  exp(-lambda) ];
     fp = [ -1.0,    0.0, -exp(-lambda) ];
