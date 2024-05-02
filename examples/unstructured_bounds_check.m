@@ -50,8 +50,6 @@ plot(nrm, bnd(1, :), 'k--');
 plot(nrm, bnd(2, :), 'b--');
 plot(nrm, bnd(3, :), 'm--');
 
-%writematrix([nrm', be', bnd'], './unstructured_bounds_check.dat', 'Delimiter', '\t');
-
 function [fv, fvp] = f(x)
     fv = [ x^2, x, 1, expm(-x), expm(-2*x)];
     if nargout > 1
