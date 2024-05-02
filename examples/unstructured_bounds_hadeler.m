@@ -41,5 +41,3 @@ loglog(nrm, be, 'r*'); hold on;
 plot(nrm, bnd(1, :), 'k--');
 plot(nrm, bnd(2, :), 'b--');
 plot(nrm, bnd(3, :), 'm--');
-
-%writematrix([nrm', be', bnd'], './unstructured_bounds_check_hadeler.dat', 'Delimiter', '\t');
