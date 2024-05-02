@@ -67,8 +67,6 @@ loglog(nrm, be, 'r*'); hold on;
 plot(nrm, bnd(1, :), 'k--');
 plot(nrm, bnd(2, :), 'b--');
 
-writematrix([nrm', be', bnd'], './symmetric_bounds_check_large.dat', 'Delimiter', '\t');
-
  function [fv, fvp] = f(x)
      fv = [ x^2, x, 1, expm(-x), expm(-2*x)];
     if nargout > 1
